@@ -1,0 +1,62 @@
+---
+title: "Ejercicio 7"
+author: "Cristóbal Marchant"
+date: '2022-07-10'
+output: html_document
+---
+## 1. Ejemplo de regresión lineal simple utilizando un conjunto de datos con dos variables y la función lm.
+
+Se crea un conjunto de datos para 2 variables a partir de las estadisticas de los Pokemon iniciales de cada region.
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r cars}
+# Vida Base Pokemon inicial
+VB=c(78,79,80,78,85,80,80,100,70,76,84,95,110,95,75,75,72,88,95,80,78,80,70,100)
+# Daño de ataque base Pokemon inicial
+DA= c(84,83,82,84,105,82,120,110,85,104,86,109,123,100,75,69,95,107,115,74,107,115,85,125)
+```
+Grafique utilizando las funciones plot y abline.
+La función lm se utiliza para ajustar modelos lineales:
+```{r}
+lm.fit=lm(VB~DA)
+lm.fit
+summary(lm.fit)
+plot(VB~DA)
+abline(42.887 , 0.419,col='blue')
+```
+
+## 2. Modelo de regresión lineal simple de la actividad 1 para predecir 5 nuevos registros e incorpórelos a su conjunto de datos.
+```{r}
+DA_P<-c(3,46,78,105,147)
+
+predict.lm(lm.fit,data.frame(DA=DA_P))
+```
+Se Calcula nuevamente la regresión lineal simple 
+```{r}
+VB = append(VB, c(44.14422, 62.16028, 75.56758, 86.87999, 104.47707))
+DA = append(DA, DA_P)
+lm.fit=lm(VB~DA)
+lm.fit
+plot(VB~DA)
+abline(42.887 , 0.419,col='red')
+```
+
+¿Se observa algún cambio en los coeficientes?
+
+R= No se muestra ningun cambio, ya que la función de predicciones sigue el modelo del objeto, es decir, sobre la regresión lineal que poseemos
+
+## 3. Tome un punto cualquiera de su conjunto de datos y multiplíquelo por 100
+```{r}
+VB_Aux = append(VB, 85*100)
+DA_Aux = append(DA, 105*100)
+lm.fit = lm(VB_Aux~DA_Aux)
+lm.fit
+plot(VB_Aux~DA_Aux)
+abline( 6.5773 , 0.8088,col='green')
+```
+
+¿Se observa algún cambio en los coeficientes?
+
+Se nota un cambio en la disminución y un aumento en los coeficientes resultantes respectivamente, cambiando asi, el modelo lineal, esto debido a que al multiplicar por 100 ambos nuevos valores da un resultado distinto al del metodo de predicción (metodo que sigue el modelo lineal)

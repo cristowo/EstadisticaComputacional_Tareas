@@ -1,0 +1,170 @@
+---
+title: "Ejercicio 2 - Estadistica Computacional"
+author: "Cristóbal Marchant"
+date: '2022-03-23'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(gtools)
+```
+## Explique brevemente la diferencia entre permutación y combinación.
+Una permutación consiste en generar todas las posiciones posibles de elementos en donde esta tiene influye el orden, es decir, puede ver de cuantas formas se pueden agrupar un número determinado de elementos.
+Una combinación consiste en generar todas las posibles agrupaciones de elementos en donde no se toman en cuenta los grupos repetidos (grupos con los mismos elementos).
+Un ejemplo es que teniendo la siguientes listas (1, 2, 3) (3, 2, 1), para la permutación estas contarían como 2 distintas, ya que los elementos están ordenados de manera distintas, pero para la combinación cuenta como una sola, ya que son el mismo grupo de números.
+
+## Busque en la ayuda de R las funciones combinations y permutations y explique brevemente cómo funcionan.
+combinations(n, r, v = 1:n, set = TRUE, repeats.allowed = FALSE)
+
+permutations(n, r, v = 1:n, set = TRUE, repeats.allowed = FALSE)
+
+la función de combinations y permutations poseen la misma cantidad de entradas, la principal que es una “n” que es el numero de elementos que se consideran para la permutación, “r” es el largo de la lista en donde se realiza la permutación, Ej: n=3 ; r=1, se obtiene una combinación de 3 (a)(b)(c), “v”= es el vector fuentes, lo que hace es que el numero vaya de 1 hasta n, “set” indica si los duplicados deben eliminarse y por ultimo “repeats.allowed” indica si es con repetición o no.
+
+## Cálculo de ejercicios.
+Entendiendo que hay 2 maneras de poder escribirse la solución, se dejaran ambas, la solución matemática y la solución por parte de una función de RStudio.
+
+### a)	La cantidad de permutaciones posibles con n = 14 y r = 4 con y sin repetición.
+##### Permutaciones CON
+```{r}
+14**4 
+nrow(permutations(14, 4, 1:14, TRUE, TRUE))
+```
+
+#### Permutaciones SIN 
+```{r}
+factorial(14)/factorial(14-4)
+nrow(permutations(14, 4, 1:14, TRUE, FALSE))
+```
+### b)	Las combinaciones de largo tres con las letras a, b y c con y sin repetición. 
+
+#### Combinacion CON
+```{r}
+factorial(3+3-1)/(factorial(3)*(factorial(3-1)))
+nrow(combinations(3, 3, 1:3, TRUE, TRUE))
+```
+
+#### Combinacion SIN
+```{r}
+factorial(3)/(factorial(3)*factorial(3-3))
+nrow(combinations(3, 3, 1:3, TRUE, FALSE))
+```
+### c)	La cantidad de permutaciones y combinaciones con n = 30 y r = 2 sin repetición.
+#### Permutaciones SIN 
+```{r}
+factorial(30)/factorial(30-2)
+nrow(permutations(30, 2, 1:30, TRUE, FALSE))
+```
+
+#### Combinacion SIN
+```{r}
+factorial(30)/(factorial(2)*factorial(30-2))
+nrow(combinations(30, 2, 1:30, TRUE, FALSE))
+```
+## Utilizando el conjunto de datos Titanic:
+### a)	Cree una función que calcule la probabilidad de A dado B.
+PB = probabilidad de que ocurra B (ejemplo: de todas las personas tengan un título)
+PA = probabilidad de que ocurra A (ejemplo: de todas las personas, las que sean mujeres)
+PBA = probabilidad de que ocurra B con respecto de A (ejemplo: de las personas que tengan un título, que sean mujeres)
+```{r}
+PAB=function(PA, PB, PBA){  
+  (PBA * PA)/PB
+}
+```
+### b) Responda las siguientes preguntas:
+#### 1) ¿Cuál es el porcentaje de supervivencia de los pasajeros y de la 	tripulación?¿Cuál es mayor?
+Tomando en cuenta a cada uno con su respectivo índice de supervivencia y los siguientes datos
+```{r}
+apply(Titanic,c(1, 4),sum)
+
+pasajeros = (499/1316)*100
+tripulación =  (212/885)*100
+
+pasajeros
+tripulación
+```
+Viendo así que el porcentaje de supervivencia fue mayor para los pasajeros, de igual manera si se tomando en cuenta a toda la gente como caso base, el resultado seria el mismo, en donde los pasajeros tienen mayor porcentaje de supervivencia.
+
+#### 2) ¿Cuál es la probabilidad de que una mujer de la tripulación sobreviva? 
+Suponiendo una interpretación de manera que sea, cual la probabilidad de que una mujer sea de la tripulación y que esta sobreviva.
+Datos:
+```{r}
+apply(Titanic,c(2, 1, 4),sum)
+```
+se aplicaría la formula desarrollada anteriormente, en donde:
+```{r}
+#PA= Probabilidad de sea mujer de la tripulación con respecto a toda la gente
+#PB= Probabilidad de que supervivencia con el total de gente
+#PBA= probabilidad total de mujeres de la tripulación sobrevivientes con respecto a el total de mujeres de la tripulación
+
+MVT= PAB((23/2201), (711/2201), (20/23))
+
+MVT
+```
+
+#### 3) ¿Cuál es la probabilidad de que un(a) menor de edad sobreviva en tercera clase? 
+Suponiendo que la interpretación sea, cual es la probabilidad de elegir un niño que sobreviva y este sea de tercera clase
+dato:
+```{r}
+apply(Titanic,c(3, 1, 4),sum)
+```
+
+```{r}
+# PA= el total de niños de 3ra clase con respecto a toda la gente
+# PB = es el total de gente viva con respecto al toda la gente
+# PBA = es la cantidad de niños vivos de 3ra clase con respecto al total de niños de 3ra clase
+NV3ra= PAB((79/2201), (711/2201), (27/79))
+
+NV3ra
+```
+
+#### 4) ¿En general se cumple el código “mujeres y niños(as) primero”?
+analizando los resultados, y ubicándolos en una tabla, en donde sea cantidad de “X” vivos/cantidad total de “X”
+```{r}
+niños = (29+28)/(29+28+35+17)
+mujeres = (316)/(316+109)
+hombres = 338/(1329+338)
+
+niños
+mujeres 
+hombres
+```
+En conclusión, se puede confirmar que el código se cumple parcialmente, debido a que no se priorizo a un 48% aprox de los niños, en cambio las mujeres si tuvieron un mejor resultado.
+
+#### 5) Seleccione una clase de forma aleatoria, puede utilizar la función sample. ¿En la clase seleccionada se cumple el código “mujeres y niños(as) primero”?
+```{r}
+clase = sample(names(apply(Titanic,c(1),sum)),1)
+clase
+
+if(clase == "1st"){
+  if (((5+1)/(5+1)) > (57/(118+57))  & ( 140/(140+4)) > (57/(118+57))){
+    cat("Cumple con el código")
+  } else {
+    cat("no cumple con el código")
+  }
+}
+if (clase == "2nd"){
+  if ((((11+13)/(11+13)) > (14/(154+14)) & ( 80/(80+13)) > (14/(154+14)))){
+    cat("Cumple con el código")
+  } else {
+    cat("no cumple con el código")
+  }
+}
+if(clase == "3rd"){
+  if ((((13+14)/(35+17+13+14)) > (75/(387+75)) & ( 89/(89+76)) > (75/(387+75)))){
+    cat("Cumple con el código")
+  } else {
+    cat("no cumple con el código")
+  }
+}
+if(clase == "Crew"){
+  if ((20/(20+3)) > (192/(192+670))){
+    cat("Cumple con el código")
+  } else {
+    cat("no cumple con el código")
+  }
+}
+```

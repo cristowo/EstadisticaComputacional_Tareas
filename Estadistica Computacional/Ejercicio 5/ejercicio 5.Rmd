@@ -1,0 +1,85 @@
+---
+title: "Ejercicio 5 - Estadistica Computacional"
+author: "Cristóbal Marchant"
+date: '2022-06-10'
+output: html_document
+---
+
+Utilizando la función de la distribución exponencial.
+$$
+ λe^{-λ*x} ; x >= 0
+$$
+The log-likelihood function:
+$$
+\prod^{n}_{i=1} λe^{-λ*x} = \sum^n_{i=1}log(λe^{-λ*x})=\sum^n_{i=1}log(λ)+\sum^n_{i=1}log(e^{-λ*x}) = log(λ)*n -λ\sum^n_{i=1}x
+$$
+
+# Paso 1: Generar los datos
+
+```{r}
+library(pacman)
+p_load(data.table, fixest, lattice, magrittr, ggplot2, kableExtra,dplyr)
+```
+
+```{r}
+x = 150                                 # Número de observaciones
+lambda = 4                              # Lambda arbitraria 
+# Exponential distribution
+distribucion = rexp(x, lambda)          # Generar la distribución
+datos=data.frame(distribucion)          # Generar el data frame
+```
+
+# Paso 2: Derivar la función de verosimilitud
+```{r}
+#The log-likelihood function
+maxVero = function(lambda,x,n){
+  return (-(log(lambda)*n - lambda*sum(x)))
+}
+plot(seq(0,40), maxVero(seq(0,40),distribucion, 150))
+```
+
+# Paso 3: Estimación por máxima verosimilitud
+```{r}
+MLE_estimates <- optim(fn=maxVero,                    # Función de verosimilitud de distribucion exponencial 
+                       par=c(1),                      # Estimación inicial
+                       lower = c(-Inf, -Inf),         # Límite inferior de los parámetros
+                       upper = c(Inf, Inf),           # Límite superior de los parámetros
+                       hessian=TRUE,                  # Devuelve el Hessiano 
+                       method = "L-BFGS-B",
+                       n = 150,                       # n -> Función de verosimilitud de distribucion exponencial 
+                       x = distribucion)              # x -> Función de verosimilitud de distribucion exponencial 
+
+# Examinar estimaciones
+MLE_par <- MLE_estimates$par
+MLE_SE <- sqrt(diag(solve(MLE_estimates$hessian)))
+MLE <- data.table("Lambda original--" = lambda,
+                  "--Estimacion de Lamnda--" = MLE_par,
+                  "--Desviación estandar"=MLE_SE)
+
+kable(MLE)
+```
+
+# Paso 4: Graficar estimaciones
+```{r}
+grafico <- function(x = distribucion, n = 150){
+  lambda = MLE_par
+  graficoaux <- log(lambda)*n - lambda*sum(x)
+  return (graficoaux)
+}
+# Vectorizar
+grafico <- Vectorize(grafico)
+
+# Graficar
+ggplot(data = data.frame(lambda = 0), mapping = aes(lambda = lambda)) + stat_function(fun = grafico) + xlim(0,40) + theme_bw() +xlab("lambda") + ylab("log lik")
+```
+
+Referencias:
+
+Marco Taboga, Exponential distribution - Maximum Likelihood Estimation.
+https://stat.ethz.ch/R-manual/R-devel/library/stats/html/Exponential.html
+
+R Documentation, The Exponential Distribution.
+https://www.statlect.com/fundamentals-of-statistics/exponential-distribution-maximum-likelihood
+
+
+

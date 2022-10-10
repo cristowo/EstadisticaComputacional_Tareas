@@ -1,0 +1,144 @@
+---
+title: "Ejercicio 4 - Estadistica Computacional"
+author: "Cristóbal Marchant"
+date: '2022-05-13'
+output: html_document
+---
+
+# Conjunto de datos 
+
+Conjunto de datos obtenidos de https://www.kaggle.com/datasets/rounakbanik/pokemon 
+```{r}
+datos=read.csv("pokemon.csv", sep = ",", stringsAsFactors = F) 
+```
+
+# 1.1. Distribución de frecuencia
+
+## Variables cualitativa - Tipo Principal
+
+Tabla de frecuencia sobre una variable cualitativa, en donde se usara el atributo Tipo principal del pokemon.
+```{r}
+fi=-as.numeric(sort(-(table(datos$type1))))   #Frecuencia absoluta
+fac=cumsum(fi)                                #Frecuencia acumulada
+fri=as.numeric(fi/sum(fi))*100                #Frecuencia relativa
+frac=cumsum(fri)                              #Frecuencia relativa acumulada
+Tipo=c("Agua","Normal","Planta","Bicho","Psiquico","Fuego","Roca","Electrico","Tierra","Veneno","Siniestro","Lucha","Dragon","Fantasma","Acero","Hielo","Hada","Volador")
+#Tabla
+frec_Tipo=data.frame(Tipo,fi,fac,fri=round(fri,2),frac=round(frac,2))
+#Visualización
+knitr::kable(frec_Tipo)
+```
+
+## Variables cuantitativa - Vida Base (HP)
+```{r}
+#Tabla de frecuencia variables cuantitativas
+#Frecuencia
+fi=as.numeric(table(datos$hp))    #Frecuencia absoluta
+fac=cumsum(fi)                    #Frecuencia acumulada
+fri=as.numeric(fi/sum(fi))*100    #Frecuencia relativa
+frac=cumsum(fri)                  #Frecuencia relativa acumulada
+#Tabla
+vidaBase=sort(unique(datos$hp))
+frec_vidaBase=data.frame(vidaBase,fi,fac,fri=round(fri,2),frac=round(frac,2))
+#Visualización
+knitr::kable(head(frec_vidaBase,5))
+
+knitr::kable(tail(frec_vidaBase,5))
+```
+
+### Pregunta 1
+#### ¿Qué ocurre al construir directamente una tabla de frecuencia?¿Qué conclusiones se pueden extraer?
+
+R: Cuando se construye una tabla de frecuencia, esta se divide en 4 secciones, la primera la frecuencia absoluta, que es la cantidad de veces que se repite una característica o suceso en un número determinado de experimentos, la segunda es la frecuencia acumulada, la cual es la suma progresiva de la frecuencia absoluta, la tercera es la frecuencia relativa, que es el porcentaje de que esta característica o suceso aparezca, y la frecuencia relativa acumulada, que es la suma progresiva de la anterior. 
+
+Entonces gracias a estos datos podemos extraer información de la tabla de frecuencia de una manera más ordenada y fácil de leer, tales como poder ver cual tiene mayor numero, cual se repite más, alguna búsqueda en particular, etc. Y a base de esto generar conclusiones, predicciones, etc. 
+
+En este caso, se construyo una tabla en donde se muestran los tipos elementales principales de cada Pokémon, un dato puede ser que el tipo Agua tiene una frecuencia relativa de 14.23, que el tipo Dragon tiene una frecuencia de 27, o que hay 801 Pokémon considerados.
+
+
+```{r}
+#Tabla de frecuencia variables cuantitativas
+#Frecuencia
+vidaBase=sort(unique(datos$hp))       # Ordenar los datos
+n = length(vidaBase)                    # Número de elementos de edad
+k = round(1 + 3.3 * log(n))         # Aplicamos regla de Sturges
+h = round((max(vidaBase)-min(vidaBase))/k)  # Cálculo de intervalo
+
+#Crear intervalos
+intervalos=hist(datos$hp, plot=FALSE, breaks = k)$breaks
+intervalos=paste("(",intervalos[1:(length(intervalos)-1)],"-",intervalos[2:(length(intervalos))],"]",sep="")
+intervalos[1]="[0-20]"
+
+#Cálculo de frecuencia
+fi = hist(datos$hp, plot=FALSE, breaks = k)$counts      #Frecuencia con intervalos
+fac=cumsum(fi)                                            #Frecuencia acumulada
+fri=as.numeric(fi/sum(fi))*100                            #Frecuencia relativa
+frac=cumsum(fri)                                          #Frecuencia relativa acumulada  
+
+frec_vidaBase=data.frame(vidaBase=intervalos,fi,fac,fri=round(fri,2),frac=round(frac,2))
+knitr::kable(frec_vidaBase)
+```
+
+# 1.2. Gráficos
+
+## Variables cualitativa - Tipo Principal
+
+### Gráfico de barras
+```{r, include=FALSE}
+library(ggplot2)
+library(plotly)
+```
+```{r}
+# Gráfico de barras
+p=ggplot(data=frec_Tipo, aes(x=reorder(Tipo, -fri),y=fi)) +
+  geom_bar(stat="identity",fill="indianred1",alpha=0.8) + theme_minimal() + 
+  labs(title="Frecuencia absoluta - Tipo principal", x="Tipo principal", y = "Frecuencia absoluta")
+ggplotly(p)
+```
+
+### Gráfico tipo pie
+```{r}
+p=ggplot((frec_Tipo), aes(x="", y=fri, fill=reorder(Tipo, -fri))) +
+  geom_bar(stat="identity", width=1) + coord_polar("y", start=0) + theme_minimal() +
+  labs(title="Frecuencia relativa - Tipo principal", x="Tipo principal", y = "Frecuencia relativa (%)")
+p=p + scale_fill_brewer(palette="PuOr",aesthetics = "colour",name = "Tipo principal del Pokémon")
+plot(p)
+```
+
+### Gráfico tipo Pareto
+```{r}
+p=ggplot(data=frec_Tipo, aes(x=reorder(Tipo, -fri),y=fi)) +
+  geom_bar(stat="identity",fill="indianred1",alpha=0.8) + theme_minimal() + 
+  labs(title="Frecuencia absoluta y absoluta acumulada - Tipo principal", x="Tipo principal", y = "Frecuencia absoluta")
+p = p + geom_point(aes(y=fac))
+ggplotly(p)
+```
+
+## Variables cuantitativas - Vida Base (HP)
+
+### Diagrama de punto
+```{r}
+library("BHH2")
+dotPlot(datos$hp,xlab = "Vida Base",)
+```
+
+### Histograma
+```{r}
+grafico=ggplot(datos,aes(hp)) # Gráfico y datos base
+#Histograma (25 niveles) (colores- http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf)
+grafico = grafico + geom_histogram(bins=30,fill="indianred1",color="indianred1",alpha=0.8)
+grafico = grafico + theme_bw() # Visualización estándar en blanco y negro
+grafico = grafico + ylab("Frecuencia absoluta (vida base)") + xlab("Vida Base")
+grafico = grafico + ggtitle("Histograma")
+ggplotly(grafico)
+```
+
+### Pregunta 2
+
+#### ¿Qué diferencia aprecia entre ambos tipos de representaciones?
+
+R: Para los tipos de replantaciones en tablas tenemos que estas nos entregan la información de manera más exacta y de forma numérica, en donde un usuario puede encontrar el valor preciso de un dato requeríos, en cambio en una representación gráfica tenemos 2 tipos más de representaciones, las cuales son aptas para datos cualitativos y otras para datos cuantitativos.
+
+Refiriéndonos a los datos cualitativos podemos encontrar la diferencia entre el grafico de barras, grafico de pie y el grafico de pareto. El grafico de barras nos muestra la cantidad de cada tipo de elemento o mejor dicho la frecuencia, esta estando de manera ordenada y fácil de entender, por otro lado, tenemos el grafico de pie que muestra las proporciones de cada elemento en un conjunto, de esta manera se busca expresar el tamaño de cada una con respecto al resto, para finalizar el grafico de parto es un gráfico de barras ordenado de mayo a menor con la peculiaridad que incluye la frecuencia acumulada dentro de este.
+
+Refiriéndonos a los datos cuantitativos podemos encontrar la diferencia entre el Diagrama de punto y el Histograma, en donde por su parte el Diagrama de punto muestra todas las variables, para cuando una característica de esta variable se repite, esta se apile con la ya estaba, de esta manera genera un diagrama que muestra a todas las variables con su característica distintiva de manera ordenada, mientras que el Histograma presenta barras en vez de puntos, en donde cada barra es similar a un intervalo de frecuencia de los valores obtenidos, de esta manera haciendo esta más general que el Diagrama de punto.

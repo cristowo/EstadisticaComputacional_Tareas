@@ -1,0 +1,270 @@
+---
+title: "Ejercicio 6 - Estadistica Computacional"
+author: "Cristóbal Marchant"
+date: '2022-06-25'
+output: html_document
+---
+
+## 1. Prueba para contraste de media, con media poblacional y varianza conocida con una cola
+
+Una empresa de venta de refrescos pública en sus envases que el vencimiento de su producto es de 240 días, En una muestra de 30 gaseosas se encontró que tienen una duración de 210 días. Suponga que la desviación estándar de la población es de 15 días bajo una distribución normal. Con un nivel de significancia de 0.05, ¿Qué conclusión podemos realizar?
+```{r}
+library("ggplot2")
+
+grafico_densidad = ggplot(data = data.frame(x = c(100, 380)), aes(x)) +
+  stat_function(fun = dnorm, n = 30, args = list(mean =240, sd = 30)) + ylab("") +
+  scale_y_continuous(breaks = NULL) + xlab("Dias") + ylab("Densidad") + ggtitle("Función de densidad (distribución normal)") + theme_bw() +
+  geom_vline(xintercept = 210,cex=1.2,colour ="darkred",linetype="longdash") + geom_text(aes(x=270, label="xbar", y=0.0), colour ="darkred",size=5) + geom_vline(xintercept = 240,cex=1.2,colour ="coral3",linetype="longdash") + geom_text(aes(x=255, label="mu", y=0.00001), colour ="coral3",size=5)  
+
+grafico_densidad
+```
+
+Nuestra hipótesis nula, basándose en los datos señalados en el enunciado puede ser especificada como:
+
+$$
+H_0:μ0 = 240 Días
+$$
+$$
+H_0:μ0 < 240 Días
+$$
+Si aplicamos la normalización para calcular z bajo una prueba de una cola, se tiene que:
+```{r setup, include=FALSE}
+library("BSDA")
+library("EnvStats")
+```
+```{r}
+#Datos
+mu=240
+sigma = 15
+muestra=rep(230,30)
+x_bar=mean(muestra)
+n= 30
+
+#Normalización
+z = (x_bar-mu)/(sigma/sqrt(n))
+
+#Confianza
+alfa = 0.05
+confianza = 1-alfa
+
+z_alfa = qnorm(1-alfa)
+
+z
+z_alfa
+```
+
+El valor de z es -3.651484, mientras que zα es 1.644854. Esto implica que z es menor al intervalo de confianza,  por lo que NO podemos rechazar Ha y rechazamos la H0.
+
+Otra prueba de esto es aplicando la función el Z Test 
+
+```{r}
+z=z.test(muestra,mu=mu,sigma.x=
+sigma,conf.level =
+confianza,alternative="less")
+z
+```
+
+Esto se puede Graficar de la siguiente manera
+
+```{r}
+dnorm_limit <- function(x) {
+    y <- dnorm(x)
+    y[x > -z_alfa] <- NA
+    return(y)
+}
+
+grafico_densidad = ggplot(data.frame(x = c(-5, 5)), aes(x = x)) + 
+  stat_function(fun = dnorm_limit, geom = "area", fill = "blue", alpha = 0.1) +  stat_function(fun = dnorm) +
+  xlab("Dias") + ylab("Densidad") + ggtitle("Función de densidad") + 
+  theme_bw() + geom_vline(xintercept = (x_bar-mu)/(sigma/sqrt(n)),cex=1.2,colour ="darkred") + 
+  geom_text(aes(x=(x_bar-mu)/(sigma/sqrt(n))+0.2, label="z", y=0.0), colour ="darkred",size=10)
+
+plot(grafico_densidad)
+```
+
+## 2. Prueba para contraste de media, con media poblacional conocida y varianza desconocida con una cola.
+
+Una empresa de videojuegos pública que los jugadores suelen jugar más de 900 minutos entre lunes y viernes. En una muestra de 30 jugadores se encontró que solo juegan en promedio durante 870 minutos. Suponga una desviación estándar de 50 minutos. Con un nivel de significancia del 0.05, ¿Que podemos concluir de esta afirmación?
+
+```{r}
+grafico_densidad = ggplot(data = data.frame(x = c(750, 1050)), aes(x)) +
+  stat_function(fun = dnorm, n = 30, args = list(mean =900, sd = 50)) + ylab("") +
+  scale_y_continuous(breaks = NULL) + xlab("Minutos") + ylab("Densidad") + ggtitle("Función de densidad (distribución normal)") + theme_bw() +
+  geom_vline(xintercept = 870,cex=1.2,colour ="darkred",linetype="longdash") + geom_text(aes(x=950, label="xbar", y=0.0), colour ="darkred",size=5) + geom_vline(xintercept = 900,cex=1.2,colour ="coral3",linetype="longdash") + geom_text(aes(x=925, label="mu", y=0.00001), colour ="coral3",size=5)  
+
+grafico_densidad
+```
+
+Nuestra hipótesis nula, basándose en los datos señalados en el enunciado puede ser especificada como:
+$$
+H_0:μ0 = 900 minutos.
+$$
+$$
+H_0:μa < 900 minutos.
+$$
+Si aplicamos la normalización para calcular t bajo una prueba de una cola, nos queda que:
+
+```{r}
+#Datos
+mu=900
+s = 50
+x_bar=870
+n=30
+
+#Normalización
+t = (x_bar-mu)/(s/sqrt(n))
+
+#Confianza
+alfa = 0.05
+confianza = 1-alfa
+
+t_alfa = qt(1-alfa,df = n-1)
+
+t
+t_alfa
+```
+
+El valor de t es -3.286335, mientras que tα es 1.699127. Esto implica que t es menor al intervalo de confianza,  por lo que NO podemos rechazar Ha y rechazamos la H0.
+
+Otra prueba de esto es aplicando la función el t Test 
+
+```{r}
+x_bar=870
+mu=900
+sigma=50
+n=30
+set.seed(3)
+muestra=rnorm(n,mean=x_bar,sigma)
+t=t.test(muestra,mu=mu,conf.level=confianza,alternative="less")
+t
+```
+
+Esto se puede Graficar de la siguiente manera
+
+```{r}
+dnorm_limit <- function(x) {
+    y <- dnorm(x)
+    y[x > -t_alfa] <- NA
+    return(y)
+}
+
+# ggplot() with dummy data
+grafico_densidad = ggplot(data.frame(x = c(-5, 5)), aes(x = x)) + 
+  stat_function(fun = dnorm_limit, geom = "area", fill = "blue", alpha = 0.2) +  stat_function(fun = dnorm) +
+  xlab("Minutos") + ylab("Densidad") + ggtitle("Función de densidad") + 
+  theme_bw() + geom_vline(xintercept = (x_bar-mu)/(s/sqrt(n)),cex=1.2,colour ="darkred") + 
+  geom_text(aes(x=(x_bar-mu)/(s/sqrt(n))+0.2, label="t", y=0.0), colour ="darkred",size=10)
+
+plot(grafico_densidad)
+```
+
+## 3. Prueba chi para varianza con dos colas.
+
+Una empresa del giro alimenticio desea determinar si el lote de una materia prima tiene o no una varianza poblacional mayor a 18 en su grado de endulzamiento. Se realiza un muestreo de 31 elementos y se obtiene una varianza muestral de 22,63; realizar la prueba de hipótesis con un nivel de significancia del 1%.
+
+url: https://www.youtube.com/watch?v=qrtBrueW_sE adaptado a 2 colas
+```{r}
+grafico_densidad = ggplot(data = data.frame(x = c(0, 40)), aes(x)) +
+  stat_function(fun = dchisq, n = 101, args = list(x =18, df = 30)) + ylab("") +
+  scale_y_continuous(breaks = NULL) + xlab("Puntaje") + ylab("Densidad") + ggtitle("Función de densidad") + theme_bw() +
+  geom_vline(xintercept = 22.63,cex=1.2,colour ="darkred") + geom_text(aes(x=32, label="S^2", y=0.0), colour ="darkred",size=5) 
+
+grafico_densidad
+```
+Nuestra hipótesis nula, basándose en los datos señalados en el enunciado puede ser especificada como:
+$$
+H_0: σ^2≤18
+$$
+Si aplicamos la normalización para calcular chi bajo una prueba de dos colas, nos queda que:
+```{r}
+#Datos
+sigma2=18
+n = 31
+s2=22.63
+
+
+#Normalización
+chi = (n-1)*s2/(sigma2)
+
+#Confianza
+alfa = 0.01
+confianza = 1-alfa
+
+chi_alfa = qchisq(alfa,df = n-1,lower.tail = F) #Lower.tail se relaciona con <= de la hipótesis nula.
+
+chi
+-chi_alfa
+chi_alfa
+```
+
+El valor de chi es 37.71667, mientras chiα es [-50.89218, -50.89218]. Esto implica que chi está dentro del intervalo de confianza, por lo que NO podemos rechazar H0
+
+Esto también puede ser probado simulando los datos, para luego aplicar la función varTest de la biblioteca de R EnvStats, obteniendo un valor p mayor a 0.01.
+
+```{r}
+#Creación de muestra artificial
+set.seed(42)
+datos=rnorm(31,sqrt(s2),n=n)
+
+#Aplicación de test
+chi = varTest(datos,sigma.squared=sigma2,alternative="greater")
+print(chi)
+```
+
+## 4. Bondad de ajuste Chi cuadrado
+
+En un muestreo del iris de 80 alumnos de la usach, existe una proporción de ½ posee ojos marrones, 5/16 ojos verdes y el resto ojos verdes, ¿Existe alguna diferencia significativa entre las proporciones?
+```{r}
+data("iris")
+
+iris = c(40/80, 25/80, 15/80)
+
+sol = chisq.test(iris, p = c(1/2, 1/3, 1/6))
+sol
+```
+
+## 5. Prueba de hipótesis en una proporción binomial, de una o dos colas.
+
+El 64,8% de los jugadores de League of Legends está debajo de la división de oro. Se realiza una encuesta en una convención de video juego a 50 personas, de las cuales 32 están debajo de oro, ¿Que se puede concluir? considere un nivel de significancia del 5%.
+
+Se tiene que 
+
+$$
+H_0: p >= 64,8
+$$
+
+```{r}
+x = 32
+n = 50
+h = 0.648
+prop.test(x, n, p = h, alt="greater", correct =FALSE)
+```
+
+p al ser mayor o igual NO se rechaza H0.
+
+## 6.Prueba de hipótesis en el que aplique la prueba del signo.
+
+Una de empresa distribuidora de mangas desea saber la forma en la cual sus usuarios leen los mangas, para saber esto se reúne un grupo de 25 usuarios y les pregunta si prefieren leerlos de manera física o de manera digital, de estos 25 usuarios, 10 prefiere leerlos físicos mientras que el resto prefiere leerlos digitalmente. ¿es posible que si se lanza un sistema de lectura online este sea rentable? Considere una significancia del 5%.
+
+```{r}
+binom.test(15, 25, conf.level = 1-0.05)
+```
+
+## 7. Prueba de hipótesis en el que aplique la prueba de Wilcoxon para una muestra.
+
+Luego del cambio de meta actual, algunos de los los campeones ADC de League of Legends tuvieron un cambio en su winrate, es por esto que podemos observar la siguiente tabla:
+```{r}
+df= data.frame(
+  "campeón" = c("Ezreal", "Jhin", "Kai'sa", "Zeri", "Lucian", "Twitch", "Samira", "Vayne", "Jinx", "Draven", "Caitlyn", "Miss Fortune", "Ashe"),
+  "WinRate" = c(49.26, 51.55, 49.12, 49.94, 48.90, 51.88, 49.98, 50.36, 48.48, 50.49, 47.91, 51.31, 51.85)
+)
+df
+```
+
+Para este ejemplo, buscamos saber si el rol de ADC dentro del juego es rentable, es decir, que posea un winrate superior al 50%, considere una significancia del 5%.
+
+```{r}
+wilcox.test(df$WinRate, mu = 50, conf.int = 1-0.05)
+```
+En conclusión el resultado al ser mayor al 50% podemos saber que aun es viable jugar el rol de ADC.
+
